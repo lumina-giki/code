@@ -417,3 +417,110 @@ void postorder(Node* root)
     cout << root->data << " ";
 }
 
+
+
+// bfs with graph and string and IDS
+#include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <queue>
+
+using namespace std;
+
+// Global ID counter
+int idCounter = 0;
+
+// 1. The Translators
+unordered_map<string, int> cityToID; // "Lahore" -> 0
+unordered_map<int, string> idToCity; // 0 -> "Lahore"
+vector<vector<int>> adj;             // The Graph (uses IDs)
+
+// Function to assign an ID to a city if it doesn't have one
+int getID(string city) {
+    if (cityToID.find(city) == cityToID.end()) {
+        // City not seen before? Assign new ID.
+        cityToID[city] = idCounter;
+        idToCity[idCounter] = city;
+        
+        // Resize graph to fit new node
+        adj.resize(idCounter + 1); 
+        
+        idCounter++;
+    }
+    return cityToID[city];
+}
+
+// Function to add edge using Strings
+void addEdge(string city1, string city2) {
+    int u = getID(city1);
+    int v = getID(city2);
+
+    // Add edge (Undirected)
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+}
+
+// BFS that takes a String start node
+void BFS(string startCity) {
+    if (cityToID.find(startCity) == cityToID.end()) {
+        cout << "Start city not found!" << endl;
+        return;
+    }
+
+    int startID = cityToID[startCity];
+    
+    // Standard BFS structures
+    vector<bool> visited(idCounter, false);
+    queue<int> q;
+
+    visited[startID] = true;
+    q.push(startID);
+
+    cout << "BFS Traversal starting from " << startCity << ": ";
+
+    while (!q.empty()) {
+        int u = q.front();
+        q.pop();
+
+        // TRANSLATE BACK: ID -> String for printing
+        cout << idToCity[u] << " -> ";
+
+        // Visit neighbors
+        for (int v : adj[u]) {
+            if (!visited[v]) {
+                visited[v] = true;
+                q.push(v);
+            }
+        }
+    }
+    cout << "End" << endl;
+}
+
+int main() {
+    // 1. Build the Graph using Strings
+    addEdge("Lahore", "Islamabad");
+    addEdge("Lahore", "Faisalabad");
+    addEdge("Islamabad", "Peshawar");
+    addEdge("Peshawar", "Swat");
+    addEdge("Karachi", "Hyderabad"); // Disconnected component
+
+    /* Internal Graph Structure (Mental Model):
+       0 (Lahore) --- 1 (Islamabad) --- 3 (Peshawar) --- 4 (Swat)
+           |
+       2 (Faisalabad)
+       
+       5 (Karachi) --- 6 (Hyderabad)
+    */
+
+    // 2. Run BFS
+    BFS("Lahore");
+    
+    cout << endl;
+    
+    // 3. Try another start point
+    BFS("Peshawar");
+
+    return 0;
+}
+
